@@ -10,19 +10,11 @@ const Review = sequelize.define('Review', {
   },
   businessId: {
     type: DataTypes.INTEGER,
-    allowNull: false,
-    references: {
-      model: 'Business',
-      key: 'id'
-    }
+    allowNull: false
   },
   userId: {
     type: DataTypes.INTEGER,
-    allowNull: false,
-    references: {
-      model: 'User',
-      key: 'id'
-    }
+    allowNull: false
   },
   rating: {
     type: DataTypes.INTEGER,
@@ -72,11 +64,7 @@ const Review = sequelize.define('Review', {
   },
   respondedBy: {
     type: DataTypes.INTEGER,
-    allowNull: true,
-    references: {
-      model: 'User',
-      key: 'id'
-    }
+    allowNull: true
   },
   isApproved: {
     type: DataTypes.BOOLEAN,

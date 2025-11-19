@@ -19,7 +19,11 @@ exports.protect = async (req, res, next) => {
 
   try {
     // Verify token
-    const decoded = jwt.verify(token, process.env.JWT_SECRET || 'your-secret-key');
+    const secret = process.env.JWT_SECRET;
+    if (!secret || secret === 'your-secret-key') {
+      return res.status(500).json({ error: 'Server configuration error' });
+    }
+    const decoded = jwt.verify(token, secret);
 
     // Get user from token
     req.user = await User.findByPk(decoded.id, {
@@ -64,10 +68,13 @@ exports.optionalAuth = async (req, res, next) => {
 
   if (token) {
     try {
-      const decoded = jwt.verify(token, process.env.JWT_SECRET || 'your-secret-key');
-      req.user = await User.findByPk(decoded.id, {
-        attributes: { exclude: ['password'] }
-      });
+      const secret = process.env.JWT_SECRET;
+      if (secret && secret !== 'your-secret-key') {
+        const decoded = jwt.verify(token, secret);
+        req.user = await User.findByPk(decoded.id, {
+          attributes: { exclude: ['password'] }
+        });
+      }
     } catch (err) {
       // Token invalid, but continue anyway
       req.user = null;

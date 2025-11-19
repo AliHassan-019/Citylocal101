@@ -16,6 +16,14 @@ router.get('/', async (req, res) => {
 
     const where = { isActive: true };
 
+    // Search by name or description
+    if (req.query.search) {
+      where[Op.or] = [
+        { name: { [Op.like]: `%${req.query.search}%` } },
+        { description: { [Op.like]: `%${req.query.search}%` } }
+      ];
+    }
+
     // Filter by category
     if (req.query.category) {
       where.categoryId = req.query.category;
@@ -24,6 +32,11 @@ router.get('/', async (req, res) => {
     // Filter by city
     if (req.query.city) {
       where.city = { [Op.like]: `%${req.query.city}%` };
+    }
+    
+    // Filter by state
+    if (req.query.state) {
+      where.state = req.query.state;
     }
 
     // Filter by rating
@@ -138,9 +151,22 @@ router.post('/', protect, async (req, res) => {
       });
     }
     
+    // Generate slug from business name
+    const generateSlug = (name) => {
+      return name
+        .toLowerCase()
+        .replace(/[^\w\s-]/g, '')
+        .replace(/\s+/g, '-')
+        .replace(/-+/g, '-')
+        .trim() + '-' + Date.now();
+    };
+    
+    const slug = generateSlug(req.body.name);
+    
     // Create business
     const business = await Business.create({
       name: req.body.name,
+      slug: slug,
       description: req.body.description,
       categoryId: req.body.categoryId,
       ownerId: req.user.id,
@@ -152,10 +178,10 @@ router.post('/', protect, async (req, res) => {
       phone: req.body.phone,
       email: req.body.email || null,
       website: req.body.website || null,
-      hours: req.body.hours || {},
+      hours: req.body.hours || null,
       isActive: false, // New businesses need approval
       isVerified: false,
-      tags: req.body.tags || []
+      tags: req.body.tags || null
     });
 
     // Update user role to business_owner
@@ -179,6 +205,8 @@ router.post('/', protect, async (req, res) => {
     });
   } catch (error) {
     console.error('Create business error:', error);
+    console.error('Error details:', error.message);
+    console.error('Stack trace:', error.stack);
     res.status(500).json({ 
       success: false,
       error: error.message || 'Failed to create business'

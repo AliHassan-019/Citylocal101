@@ -29,33 +29,45 @@ const Login = () => {
   return (
     <div className="auth-page">
       <div className="auth-container">
-        <h2>Log In</h2>
-        {error && <div className="alert alert-error">{error}</div>}
+        <h2>Welcome Back</h2>
+        <p>Enter your credentials to access your account</p>
+        
+        {error && <div className="alert alert-error">
+          <i className="fas fa-exclamation-circle"></i> {error}
+        </div>}
+        
         <form onSubmit={handleSubmit}>
           <div className="form-group">
-            <label>Email address</label>
+            <label><i className="fas fa-envelope"></i> Email Address</label>
             <input
               type="email"
               required
+              placeholder="Enter your email"
               value={formData.email}
               onChange={(e) => setFormData({ ...formData, email: e.target.value })}
             />
           </div>
           <div className="form-group">
-            <label>Password</label>
+            <label><i className="fas fa-lock"></i> Password</label>
             <input
               type="password"
               required
+              placeholder="Enter your password"
               value={formData.password}
               onChange={(e) => setFormData({ ...formData, password: e.target.value })}
             />
           </div>
           <button type="submit" className="btn-primary" disabled={loading}>
-            {loading ? 'Logging in...' : 'Log In'}
+            {loading ? (
+              <><i className="fas fa-spinner fa-spin"></i> Logging in...</>
+            ) : (
+              <><i className="fas fa-sign-in-alt"></i> Log In</>
+            )}
           </button>
         </form>
+        
         <p className="auth-link">
-          Don't have an account? <Link to="/register">Register</Link>
+          Don't have an account? <Link to="/register">Create one now</Link>
         </p>
       </div>
     </div>

@@ -30,20 +30,13 @@ const Business = sequelize.define('Business', {
   },
   categoryId: {
     type: DataTypes.INTEGER,
-    allowNull: false,
-    references: {
-      model: 'Category',
-      key: 'id'
-    }
+    allowNull: false
   },
   ownerId: {
     type: DataTypes.INTEGER,
-    allowNull: true,
-    references: {
-      model: 'User',
-      key: 'id'
-    }
+    allowNull: true
   },
+
   address: {
     type: DataTypes.STRING(255),
     allowNull: false

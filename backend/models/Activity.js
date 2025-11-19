@@ -17,12 +17,9 @@ const Activity = sequelize.define('Activity', {
   },
   userId: {
     type: DataTypes.INTEGER,
-    allowNull: true,
-    references: {
-      model: 'User',
-      key: 'id'
-    }
+    allowNull: true
   },
+  
   metadata: {
     type: DataTypes.JSON,
     allowNull: true,

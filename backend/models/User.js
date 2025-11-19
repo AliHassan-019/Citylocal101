@@ -42,12 +42,9 @@ const User = sequelize.define('User', {
   },
   businessId: {
     type: DataTypes.INTEGER,
-    allowNull: true,
-    references: {
-      model: 'Business',
-      key: 'id'
-    }
+    allowNull: true
   },
+
   phone: {
     type: DataTypes.STRING(20),
     allowNull: true

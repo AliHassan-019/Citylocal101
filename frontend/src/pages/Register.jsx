@@ -39,51 +39,65 @@ const Register = () => {
   return (
     <div className="auth-page">
       <div className="auth-container">
-        <h2>Register</h2>
-        {error && <div className="alert alert-error">{error}</div>}
+        <h2>Create Account</h2>
+        <p>Join CityLocal 101 to discover amazing businesses</p>
+        
+        {error && <div className="alert alert-error">
+          <i className="fas fa-exclamation-circle"></i> {error}
+        </div>}
+        
         <form onSubmit={handleSubmit}>
           <div className="form-group">
-            <label>Full Name</label>
+            <label><i className="fas fa-user"></i> Full Name</label>
             <input
               type="text"
               required
+              placeholder="Enter your full name"
               value={formData.name}
               onChange={(e) => setFormData({ ...formData, name: e.target.value })}
             />
           </div>
           <div className="form-group">
-            <label>Email address</label>
+            <label><i className="fas fa-envelope"></i> Email Address</label>
             <input
               type="email"
               required
+              placeholder="Enter your email"
               value={formData.email}
               onChange={(e) => setFormData({ ...formData, email: e.target.value })}
             />
           </div>
           <div className="form-group">
-            <label>Password</label>
+            <label><i className="fas fa-lock"></i> Password</label>
             <input
               type="password"
               required
+              placeholder="At least 6 characters"
               value={formData.password}
               onChange={(e) => setFormData({ ...formData, password: e.target.value })}
             />
           </div>
           <div className="form-group">
-            <label>Confirm Password</label>
+            <label><i className="fas fa-lock"></i> Confirm Password</label>
             <input
               type="password"
               required
+              placeholder="Re-enter your password"
               value={formData.confirmPassword}
               onChange={(e) => setFormData({ ...formData, confirmPassword: e.target.value })}
             />
           </div>
           <button type="submit" className="btn-primary" disabled={loading}>
-            {loading ? 'Registering...' : 'Register'}
+            {loading ? (
+              <><i className="fas fa-spinner fa-spin"></i> Creating Account...</>
+            ) : (
+              <><i className="fas fa-user-plus"></i> Create Account</>
+            )}
           </button>
         </form>
+        
         <p className="auth-link">
-          Already have an account? <Link to="/login">Log In</Link>
+          Already have an account? <Link to="/login">Sign in here</Link>
         </p>
       </div>
     </div>

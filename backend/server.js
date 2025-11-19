@@ -70,12 +70,20 @@ app.get('/api/health', (req, res) => {
   });
 });
 
-// Serve static files in production (React build)
-if (process.env.NODE_ENV === 'production') {
-  app.use(express.static(path.join(__dirname, '../frontend/build')));
+// Serve static files (React build) - works in both dev and production
+const frontendBuildPath = path.join(__dirname, '../frontend/dist');
+const fs = require('fs');
+
+if (fs.existsSync(frontendBuildPath)) {
+  app.use(express.static(frontendBuildPath));
   
-  app.get('*', (req, res) => {
-    res.sendFile(path.join(__dirname, '../frontend/build/index.html'));
+  // Serve React app for all non-API routes
+  app.get('*', (req, res, next) => {
+    // Skip API routes
+    if (req.path.startsWith('/api')) {
+      return next();
+    }
+    res.sendFile(path.join(frontendBuildPath, 'index.html'));
   });
 }
 

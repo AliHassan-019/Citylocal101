@@ -44,7 +44,7 @@ const Category = sequelize.define('Category', {
   tableName: 'categories',
   timestamps: true,
   hooks: {
-    beforeCreate: (category) => {
+    beforeValidate: (category) => {
       if (!category.slug && category.name) {
         category.slug = category.name
           .toLowerCase()
@@ -65,6 +65,7 @@ const Category = sequelize.define('Category', {
       }
     }
   }
+  
 });
 
 module.exports = Category;

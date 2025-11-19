@@ -104,9 +104,68 @@
   cursor: not-allowed;
 }
 
+/* Responsive Design */
+@media (max-width: 1024px) {
+  .businesses-grid {
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 20px;
+  }
+}
+
 @media (max-width: 768px) {
+  .businesses-page {
+    padding: 30px 0;
+  }
+  
+  .businesses-page h1 {
+    font-size: 32px;
+    margin-bottom: 25px;
+  }
+  
   .businesses-grid {
     grid-template-columns: 1fr;
+    gap: 20px;
+  }
+  
+  .business-card {
+    padding: 20px;
+  }
+  
+  .pagination {
+    gap: 15px;
+  }
+  
+  .pagination button {
+    padding: 8px 16px;
+    font-size: 14px;
+  }
+}
+
+@media (max-width: 480px) {
+  .businesses-page {
+    padding: 20px 0;
+  }
+  
+  .businesses-page h1 {
+    font-size: 28px;
+    margin-bottom: 20px;
+  }
+  
+  .business-card {
+    padding: 18px;
+  }
+  
+  .business-card h3 {
+    font-size: 20px;
+  }
+  
+  .pagination {
+    flex-direction: column;
+    gap: 10px;
+  }
+  
+  .pagination button {
+    width: 100%;
   }
 }
 

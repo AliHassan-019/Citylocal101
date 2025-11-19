@@ -24,16 +24,18 @@ const Header = () => {
           </div>
           <nav className={`nav ${mobileMenuOpen ? 'active' : ''}`}>
             <ul className="nav-list">
-              <li><Link to="/support"><i className="fas fa-headset"></i> Support</Link></li>
-              <li><Link to="/write-review"><i className="fas fa-star"></i> Write A Review</Link></li>
+              <li><Link to="/" className="home-link"><i className="fas fa-home"></i> Home</Link></li>
+              <li><Link to="/businesses"><i className="fas fa-building"></i> Businesses</Link></li>
               <li><Link to="/blog"><i className="fas fa-blog"></i> Blog</Link></li>
+              <li><Link to="/support"><i className="fas fa-headset"></i> Support</Link></li>
               {user ? (
                 <>
-                  <li><span className="user-name">Hello, {user.name}</span></li>
+                  <li><Link to="/add-business" className="add-business-btn"><i className="fas fa-plus-circle"></i> Add Business</Link></li>
+                  <li><span className="user-name"><i className="fas fa-user-circle"></i> {user.name}</span></li>
                   {user.role === 'admin' && (
-                    <li><Link to="/admin">Admin</Link></li>
+                    <li><Link to="/admin" className="admin-link"><i className="fas fa-shield-alt"></i> Admin</Link></li>
                   )}
-                  <li><button onClick={handleLogout} className="btn-logout">Logout</button></li>
+                  <li><button onClick={handleLogout} className="btn-logout"><i className="fas fa-sign-out-alt"></i> Logout</button></li>
                 </>
               ) : (
                 <>
