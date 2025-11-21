@@ -32,10 +32,14 @@ const connectDB = async () => {
     console.log('✅ MySQL Connected Successfully');
     console.log(`📊 Database: ${process.env.DB_NAME || 'citylocal101'}`);
     
-    // Sync models in development
+    // NEVER sync/alter in production - use migrations instead
+    // Only sync in development when explicitly enabled
     if (process.env.NODE_ENV === 'development' && process.env.SYNC_DB === 'true') {
-      await sequelize.sync({ alter: true });
+      console.log('⚠️  SYNC_DB is enabled - syncing models (NOT RECOMMENDED FOR PRODUCTION)');
+      await sequelize.sync({ alter: false }); // Disabled alter to prevent index issues
       console.log('🔄 Database models synchronized');
+    } else if (process.env.NODE_ENV !== 'production') {
+      console.log('💡 Database sync disabled. Use migrations for schema changes.');
     }
   } catch (error) {
     console.error('❌ MySQL Connection Error:', error.message);
@@ -44,7 +48,8 @@ const connectDB = async () => {
     console.error('   2. Check your database credentials in .env file');
     console.error('   3. Create the database if it doesn\'t exist:');
     console.error('      CREATE DATABASE citylocal101;');
-    console.error('   4. Verify MySQL is accessible on the specified host/port\n');
+    console.error('   4. Verify MySQL is accessible on the specified host/port');
+    console.error('   5. If you see "Too many keys" error, run migrations instead of sync\n');
     process.exit(1);
   }
 };

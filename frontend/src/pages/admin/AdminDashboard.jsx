@@ -16,7 +16,6 @@ const AdminDashboard = () => {
       const response = await api.get('/admin/stats');
       setStats(response.data.stats);
     } catch (error) {
-      console.error('Error loading stats:', error);
     } finally {
       setLoading(false);
     }

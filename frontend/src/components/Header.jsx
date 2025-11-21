@@ -8,6 +8,23 @@ const Header = () => {
   const navigate = useNavigate();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
+  // Get user role (with fallback to localStorage)
+  const getUserRole = () => {
+    if (user?.role) return user.role;
+    try {
+      const storedUser = localStorage.getItem('user');
+      if (storedUser) {
+        const parsed = JSON.parse(storedUser);
+        return parsed.role;
+      }
+    } catch (e) {
+      // Silent fail
+    }
+    return null;
+  };
+
+  const userRole = getUserRole();
+
   const handleLogout = () => {
     logout();
     navigate('/');
@@ -30,11 +47,9 @@ const Header = () => {
               <li><Link to="/support"><i className="fas fa-headset"></i> Support</Link></li>
               {user ? (
                 <>
-                  <li><Link to="/add-business" className="add-business-btn"><i className="fas fa-plus-circle"></i> Add Business</Link></li>
+                  {/* Always show User Dashboard for all logged-in users */}
+                  <li><Link to="/user-dashboard" className="add-business-btn"><i className="fas fa-tachometer-alt"></i> Dashboard</Link></li>
                   <li><span className="user-name"><i className="fas fa-user-circle"></i> {user.name}</span></li>
-                  {user.role === 'admin' && (
-                    <li><Link to="/admin" className="admin-link"><i className="fas fa-shield-alt"></i> Admin</Link></li>
-                  )}
                   <li><button onClick={handleLogout} className="btn-logout"><i className="fas fa-sign-out-alt"></i> Logout</button></li>
                 </>
               ) : (

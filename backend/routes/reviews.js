@@ -39,8 +39,31 @@ router.get('/', async (req, res) => {
       reviews
     });
   } catch (error) {
-    console.error('Get reviews error:', error);
+    console.log('Get reviews error:', error);
     res.status(500).json({ error: 'Server error' });
+  }
+});
+
+// @route   GET /api/reviews/my-reviews
+// @desc    Get current user's reviews
+// @access  Private
+router.get('/my-reviews', protect, async (req, res) => {
+  try {
+    const reviews = await Review.findAll({
+      where: { userId: req.user.id },
+      include: [
+        { model: Business, as: 'Business', attributes: ['id', 'name', 'slug', 'logo'] }
+      ],
+      order: [['createdAt', 'DESC']]
+    });
+
+    res.json({
+      success: true,
+      reviews
+    });
+  } catch (error) {
+    console.log('Get my reviews error:', error);
+    res.status(500).json({ error: 'Failed to fetch reviews' });
   }
 });
 
@@ -65,7 +88,7 @@ router.get('/:id', async (req, res) => {
       review
     });
   } catch (error) {
-    console.error('Get review error:', error);
+    console.log('Get review error:', error);
     res.status(500).json({ error: 'Server error' });
   }
 });
@@ -151,7 +174,7 @@ router.post('/', protect, async (req, res) => {
       review
     });
   } catch (error) {
-    console.error('Create review error:', error);
+    console.log('Create review error:', error);
     res.status(500).json({ 
       success: false,
       error: error.message || 'Failed to create review'
@@ -187,7 +210,7 @@ router.put('/:id', protect, async (req, res) => {
       review
     });
   } catch (error) {
-    console.error('Update review error:', error);
+    console.log('Update review error:', error);
     res.status(500).json({ error: 'Server error' });
   }
 });
@@ -215,7 +238,7 @@ router.delete('/:id', protect, async (req, res) => {
       message: 'Review deleted successfully'
     });
   } catch (error) {
-    console.error('Delete review error:', error);
+    console.log('Delete review error:', error);
     res.status(500).json({ error: 'Server error' });
   }
 });
@@ -253,7 +276,7 @@ router.post('/:id/helpful', protect, async (req, res) => {
       helpfulCount: review.helpfulCount
     });
   } catch (error) {
-    console.error('Mark helpful error:', error);
+    console.log('Mark helpful error:', error);
     res.status(500).json({ error: 'Server error' });
   }
 });
@@ -290,7 +313,7 @@ router.post('/:id/respond', protect, async (req, res) => {
       review
     });
   } catch (error) {
-    console.error('Respond to review error:', error);
+    console.log('Respond to review error:', error);
     res.status(500).json({ error: 'Server error' });
   }
 });

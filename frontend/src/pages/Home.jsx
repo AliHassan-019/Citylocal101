@@ -30,7 +30,6 @@ const Home = () => {
       setCategories(categoriesRes.data.categories || []);
       setBusinesses(businessesRes.data.businesses || []);
     } catch (error) {
-      console.error('Error loading data:', error);
     } finally {
       setLoading(false);
     }
@@ -55,7 +54,6 @@ const Home = () => {
         setBusinessSuggestions(response.data.businesses || []);
         setShowBusinessSuggestions(true);
       } catch (error) {
-        console.error('Error fetching business suggestions:', error);
       }
     } else {
       setBusinessSuggestions([]);
@@ -78,7 +76,6 @@ const Home = () => {
         setLocationSuggestions(uniqueLocations);
         setShowLocationSuggestions(true);
       } catch (error) {
-        console.error('Error fetching location suggestions:', error);
       }
     } else {
       setLocationSuggestions([]);
@@ -227,8 +224,8 @@ const Home = () => {
                   <div className="listing-header">
                     <h3>{business.name}</h3>
                     <div className="rating">
-                      <span className="stars">{'★'.repeat(Math.floor(business.ratingAverage))}</span>
-                      <span className="rating-value">{business.ratingAverage}</span>
+                      <span className="stars">{'★'.repeat(Math.floor(parseFloat(business.ratingAverage) || 0))}</span>
+                      <span className="rating-value">{parseFloat(business.ratingAverage) || 0}</span>
                     </div>
                   </div>
                   <p className="listing-description">{business.description?.substring(0, 100)}...</p>

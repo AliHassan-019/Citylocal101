@@ -4,6 +4,7 @@ import { AuthProvider } from './context/AuthContext';
 import Header from './components/Header';
 import Footer from './components/Footer';
 import AdminLayout from './components/AdminLayout';
+import UserDashboardLayout from './components/UserDashboardLayout';
 import ProtectedRoute from './components/ProtectedRoute';
 import Home from './pages/Home';
 import Businesses from './pages/Businesses';
@@ -25,12 +26,59 @@ import AdminCategories from './pages/admin/AdminCategories';
 import AdminBlogs from './pages/admin/AdminBlogs';
 import AdminContacts from './pages/admin/AdminContacts';
 import AdminActivities from './pages/admin/AdminActivities';
+import AdminLogin from './pages/admin/AdminLogin';
+import UserProfile from './pages/UserProfile';
+import UserBusinesses from './pages/UserBusinesses';
+import MyReviews from './pages/MyReviews';
 import './App.css';
 
 function App() {
   return (
     <AuthProvider>
       <Routes>
+        {/* Admin Login - Public route (separate from main site) */}
+        <Route path="/admin/login" element={<AdminLogin />} />
+        
+        {/* Admin Dashboard Routes - Protected (ONLY ADMIN) */}
+        <Route 
+          path="/admin/*" 
+          element={
+            <ProtectedRoute requiredRole="admin">
+              <AdminLayout>
+                <Routes>
+                  <Route index element={<AdminDashboard />} />
+                  <Route path="dashboard" element={<Navigate to="/admin" replace />} />
+                  <Route path="businesses" element={<AdminBusinesses />} />
+                  <Route path="users" element={<AdminUsers />} />
+                  <Route path="reviews" element={<AdminReviews />} />
+                  <Route path="categories" element={<AdminCategories />} />
+                  <Route path="blogs" element={<AdminBlogs />} />
+                  <Route path="contacts" element={<AdminContacts />} />
+                  <Route path="activities" element={<AdminActivities />} />
+                  <Route path="login" element={<Navigate to="/admin" replace />} />
+                </Routes>
+              </AdminLayout>
+            </ProtectedRoute>
+          } 
+        />
+
+        {/* User Dashboard Routes */}
+        <Route 
+          path="/user-dashboard/*" 
+          element={
+            <ProtectedRoute>
+              <UserDashboardLayout>
+                <Routes>
+                  <Route index element={<Navigate to="/user-dashboard/profile" replace />} />
+                  <Route path="profile" element={<UserProfile />} />
+                  <Route path="my-businesses" element={<UserBusinesses />} />
+                  <Route path="my-reviews" element={<MyReviews />} />
+                </Routes>
+              </UserDashboardLayout>
+            </ProtectedRoute>
+          } 
+        />
+
         {/* Public User Routes */}
         <Route path="/*" element={
           <div className="App">
@@ -55,28 +103,6 @@ function App() {
             <Footer />
           </div>
         } />
-
-        {/* Admin Routes - Separate Layout */}
-        <Route 
-          path="/admin/*" 
-          element={
-            <ProtectedRoute requiredRole="admin">
-              <AdminLayout>
-                <Routes>
-                  <Route index element={<AdminDashboard />} />
-                  <Route path="dashboard" element={<Navigate to="/admin" replace />} />
-                  <Route path="businesses" element={<AdminBusinesses />} />
-                  <Route path="users" element={<AdminUsers />} />
-                  <Route path="reviews" element={<AdminReviews />} />
-                  <Route path="categories" element={<AdminCategories />} />
-                  <Route path="blogs" element={<AdminBlogs />} />
-                  <Route path="contacts" element={<AdminContacts />} />
-                  <Route path="activities" element={<AdminActivities />} />
-                </Routes>
-              </AdminLayout>
-            </ProtectedRoute>
-          } 
-        />
       </Routes>
     </AuthProvider>
   );

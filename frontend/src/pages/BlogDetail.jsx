@@ -20,7 +20,6 @@ const BlogDetail = () => {
       const response = await api.get(`/blogs/${slug}`);
       setBlog(response.data.blog);
     } catch (error) {
-      console.error('Error loading blog:', error);
       setError('Blog not found');
     } finally {
       setLoading(false);

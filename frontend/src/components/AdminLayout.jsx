@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import './AdminLayout.css';
@@ -7,6 +7,12 @@ const AdminLayout = ({ children }) => {
   const location = useLocation();
   const navigate = useNavigate();
   const { user, logout } = useAuth();
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+
+  // Close mobile menu when route changes
+  useEffect(() => {
+    setMobileMenuOpen(false);
+  }, [location.pathname]);
 
   const menuItems = [
     { path: '/admin', icon: 'fas fa-dashboard', label: 'Dashboard', exact: true },
@@ -26,7 +32,27 @@ const AdminLayout = ({ children }) => {
 
   return (
     <div className="admin-layout">
-      <aside className="admin-sidebar">
+      <button 
+        className="mobile-menu-toggle"
+        onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+        aria-label="Toggle menu"
+      >
+        <i className={`fas ${mobileMenuOpen ? 'fa-times' : 'fa-bars'}`}></i>
+      </button>
+      
+      {mobileMenuOpen && (
+        <div 
+          className="mobile-overlay"
+          onClick={() => setMobileMenuOpen(false)}
+        ></div>
+      )}
+      
+      <aside className={`admin-sidebar ${mobileMenuOpen ? 'mobile-open' : ''}`} onClick={() => {
+        // Close mobile menu when clicking nav items on mobile
+        if (window.innerWidth <= 768) {
+          setMobileMenuOpen(false);
+        }
+      }}>
         <div className="admin-sidebar-header">
           <h2><i className="fas fa-shield-alt"></i> Admin Panel</h2>
         </div>
@@ -49,8 +75,8 @@ const AdminLayout = ({ children }) => {
           })}
         </nav>
         <div className="admin-sidebar-footer">
-          <Link to="/" className="admin-nav-item">
-            <i className="fas fa-home"></i>
+          <Link to="/" className="admin-nav-item" target="_blank" rel="noopener noreferrer">
+            <i className="fas fa-external-link-alt"></i>
             <span>View Site</span>
           </Link>
           <button onClick={handleLogout} className="admin-nav-item logout-btn">

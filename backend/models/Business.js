@@ -85,6 +85,11 @@ const Business = sequelize.define('Business', {
     allowNull: true,
     defaultValue: {}
   },
+  socialLinks: {
+    type: DataTypes.JSON,
+    allowNull: true,
+    defaultValue: {}
+  },
   ratingAverage: {
     type: DataTypes.DECIMAL(3, 2),
     defaultValue: 0,
@@ -124,6 +129,14 @@ const Business = sequelize.define('Business', {
     defaultValue: 0
   },
   claimedAt: {
+    type: DataTypes.DATE,
+    allowNull: true
+  },
+  rejectionReason: {
+    type: DataTypes.TEXT,
+    allowNull: true
+  },
+  rejectedAt: {
     type: DataTypes.DATE,
     allowNull: true
   }

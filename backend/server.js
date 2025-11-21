@@ -27,11 +27,24 @@ app.use(helmet({
   contentSecurityPolicy: false // Disable for API
 }));
 
-// Rate limiting
+// Rate limiting - More lenient in development
 const limiter = rateLimit({
   windowMs: (process.env.RATE_LIMIT_WINDOW || 15) * 60 * 1000,
-  max: process.env.RATE_LIMIT_MAX_REQUESTS || 100,
-  message: 'Too many requests from this IP, please try again later.'
+  max: process.env.NODE_ENV === 'development' 
+    ? (process.env.RATE_LIMIT_MAX_REQUESTS || 1000)  // 1000 requests per 15 min in dev
+    : (process.env.RATE_LIMIT_MAX_REQUESTS || 100),  // 100 requests per 15 min in production
+  message: 'Too many requests from this IP, please try again later.',
+  standardHeaders: true,
+  legacyHeaders: false,
+  // Skip rate limiting for health checks
+  skip: (req) => req.path === '/api/health',
+  // Custom handler to provide better error messages
+  handler: (req, res) => {
+    res.status(429).json({
+      error: 'Too many requests from this IP, please try again later.',
+      retryAfter: Math.ceil((req.rateLimit.resetTime - Date.now()) / 1000)
+    });
+  }
 });
 app.use('/api/', limiter);
 
@@ -41,9 +54,9 @@ app.use(cors({
   credentials: true
 }));
 
-// Body parser middleware
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
+// Body parser middleware with increased limit for images
+app.use(express.json({ limit: '10mb' }));
+app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 app.use(cookieParser());
 
 // Logging middleware

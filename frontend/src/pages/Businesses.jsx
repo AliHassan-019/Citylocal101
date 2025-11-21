@@ -28,7 +28,6 @@ const Businesses = () => {
       setBusinesses(response.data.businesses || []);
       setTotalPages(response.data.pages || 1);
     } catch (error) {
-      console.error('Error loading businesses:', error);
     } finally {
       setLoading(false);
     }
@@ -49,9 +48,9 @@ const Businesses = () => {
                 <div key={business.id} className="business-card" onClick={() => navigate(`/businesses/${business.id}`)}>
                   <h3>{business.name}</h3>
                   <div className="rating">
-                    <span className="stars">{'★'.repeat(Math.floor(business.ratingAverage))}</span>
-                    <span className="rating-value">{business.ratingAverage}</span>
-                    <span className="rating-count">({business.ratingCount})</span>
+                    <span className="stars">{'★'.repeat(Math.floor(parseFloat(business.ratingAverage) || 0))}</span>
+                    <span className="rating-value">{parseFloat(business.ratingAverage) || 0}</span>
+                    <span className="rating-count">({business.ratingCount || 0})</span>
                   </div>
                   <p className="description">{business.description?.substring(0, 150)}...</p>
                   <div className="business-info">

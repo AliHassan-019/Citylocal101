@@ -51,7 +51,6 @@ router.get('/stats', async (req, res) => {
       stats
     });
   } catch (error) {
-    console.error('Get stats error:', error);
     res.status(500).json({ error: 'Server error' });
   }
 });
@@ -84,7 +83,7 @@ router.get('/businesses', async (req, res) => {
       businesses
     });
   } catch (error) {
-    console.error('Admin get businesses error:', error);
+    // Removed console.error'Admin get businesses error:', error);
     res.status(500).json({ error: 'Server error' });
   }
 });
@@ -94,12 +93,20 @@ router.get('/businesses', async (req, res) => {
 // @access  Private (Admin only)
 router.put('/businesses/:id/approve', async (req, res) => {
   try {
-    const business = await Business.findByPk(req.params.id);
+    const business = await Business.findByPk(req.params.id, {
+      include: [{ model: User, as: 'owner', attributes: ['id', 'name', 'email'] }]
+    });
+    
     if (!business) {
       return res.status(404).json({ error: 'Business not found' });
     }
 
-    await business.update({ isActive: true, isVerified: true });
+    await business.update({ 
+      isActive: true, 
+      isVerified: true,
+      rejectionReason: null,
+      rejectedAt: null
+    });
 
     await logActivity({
       type: 'business_approved',
@@ -108,13 +115,155 @@ router.put('/businesses/:id/approve', async (req, res) => {
       metadata: { businessName: business.name, businessId: business.id }
     });
 
+    // Send approval email to business owner
+    if (business.owner && business.owner.email) {
+      const sendEmail = require('../utils/sendEmail');
+      await sendEmail({
+        to: business.owner.email,
+        subject: `Your Business Listing Has Been Approved! - ${business.name}`,
+        html: `
+          <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; background-color: #f9f9f9;">
+            <div style="background-color: #4cd964; color: white; padding: 30px; text-align: center; border-radius: 8px 8px 0 0;">
+              <h1 style="margin: 0; font-size: 28px;">🎉 Congratulations!</h1>
+              <p style="margin: 10px 0 0 0; font-size: 16px;">Your business listing has been approved</p>
+            </div>
+            <div style="background-color: white; padding: 30px; border-radius: 0 0 8px 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+              <p style="color: #333; font-size: 16px; line-height: 1.6;">
+                Hello <strong>${business.owner.name}</strong>,
+              </p>
+              <p style="color: #333; font-size: 16px; line-height: 1.6;">
+                Great news! Your business listing <strong>"${business.name}"</strong> has been approved and is now live on CityLocal 101.
+              </p>
+              <div style="background-color: #f5f5f5; padding: 20px; border-radius: 8px; margin: 25px 0;">
+                <h3 style="margin: 0 0 15px 0; color: #2c3e50;">What's Next?</h3>
+                <ul style="margin: 0; padding-left: 20px; color: #555;">
+                  <li style="margin-bottom: 10px;">Your listing is now visible to potential customers</li>
+                  <li style="margin-bottom: 10px;">Manage your listing anytime from your dashboard</li>
+                  <li style="margin-bottom: 10px;">Respond to customer reviews and inquiries</li>
+                  <li style="margin-bottom: 10px;">Keep your information up-to-date</li>
+                </ul>
+              </div>
+              <div style="text-align: center; margin: 30px 0;">
+                <a href="${process.env.FRONTEND_URL || 'http://localhost:5173'}/business-dashboard" 
+                   style="display: inline-block; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); 
+                          color: white; padding: 15px 40px; text-decoration: none; border-radius: 8px; 
+                          font-weight: 600; font-size: 16px;">
+                  View My Dashboard
+                </a>
+              </div>
+              <p style="color: #7f8c8d; font-size: 14px; margin-top: 30px; text-align: center;">
+                Thank you for choosing CityLocal 101!
+              </p>
+            </div>
+          </div>
+        `
+      }).catch(() => {});
+    }
+
     res.json({
       success: true,
       message: 'Business approved successfully',
       business
     });
   } catch (error) {
-    console.error('Approve business error:', error);
+    // Removed console.error'Approve business error:', error);
+    res.status(500).json({ error: 'Server error' });
+  }
+});
+
+// @route   PUT /api/admin/businesses/:id/reject
+// @desc    Reject business with reason
+// @access  Private (Admin only)
+router.put('/businesses/:id/reject', async (req, res) => {
+  try {
+    const { rejectionReason } = req.body;
+    
+    if (!rejectionReason || rejectionReason.trim().length === 0) {
+      return res.status(400).json({ error: 'Rejection reason is required' });
+    }
+
+    const business = await Business.findByPk(req.params.id, {
+      include: [{ model: User, as: 'owner', attributes: ['id', 'name', 'email'] }]
+    });
+    
+    if (!business) {
+      return res.status(404).json({ error: 'Business not found' });
+    }
+
+    await business.update({ 
+      isActive: false,
+      isVerified: false,
+      rejectionReason: rejectionReason.trim(),
+      rejectedAt: new Date()
+    });
+
+    await logActivity({
+      type: 'business_rejected',
+      description: `Business "${business.name}" was rejected by admin`,
+      userId: req.user.id,
+      metadata: { 
+        businessName: business.name, 
+        businessId: business.id,
+        rejectionReason: rejectionReason.trim()
+      }
+    });
+
+    // Send rejection email to business owner
+    if (business.owner && business.owner.email) {
+      const sendEmail = require('../utils/sendEmail');
+      await sendEmail({
+        to: business.owner.email,
+        subject: `Business Listing Review - ${business.name}`,
+        html: `
+          <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; background-color: #f9f9f9;">
+            <div style="background-color: #e74c3c; color: white; padding: 30px; text-align: center; border-radius: 8px 8px 0 0;">
+              <h1 style="margin: 0; font-size: 28px;">⚠️ Business Listing Update</h1>
+              <p style="margin: 10px 0 0 0; font-size: 16px;">Action Required</p>
+            </div>
+            <div style="background-color: white; padding: 30px; border-radius: 0 0 8px 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+              <p style="color: #333; font-size: 16px; line-height: 1.6;">
+                Hello <strong>${business.owner.name}</strong>,
+              </p>
+              <p style="color: #333; font-size: 16px; line-height: 1.6;">
+                We've reviewed your business listing <strong>"${business.name}"</strong> and need some additional information or corrections before we can approve it.
+              </p>
+              <div style="background-color: #fff3cd; border-left: 4px solid #ffc107; padding: 20px; border-radius: 4px; margin: 25px 0;">
+                <h3 style="margin: 0 0 15px 0; color: #856404;">Reason for Rejection:</h3>
+                <p style="color: #856404; line-height: 1.6; margin: 0;">
+                  ${rejectionReason.replace(/\n/g, '<br>')}
+                </p>
+              </div>
+              <div style="background-color: #f5f5f5; padding: 20px; border-radius: 8px; margin: 25px 0;">
+                <h3 style="margin: 0 0 15px 0; color: #2c3e50;">What to Do Next:</h3>
+                <ul style="margin: 0; padding-left: 20px; color: #555;">
+                  <li style="margin-bottom: 10px;">Review the reason above</li>
+                  <li style="margin-bottom: 10px;">Update your business information as needed</li>
+                  <li style="margin-bottom: 10px;">Resubmit your listing for review</li>
+                  <li style="margin-bottom: 10px;">If you have questions, contact our support team</li>
+                </ul>
+              </div>
+              <div style="text-align: center; margin: 30px 0;">
+                <a href="${process.env.FRONTEND_URL || 'http://localhost:5173'}/business-dashboard" 
+                   style="display: inline-block; background: #667eea; color: white; padding: 15px 40px; text-decoration: none; border-radius: 8px; font-weight: 600; font-size: 16px;">
+                  Update My Listing
+                </a>
+              </div>
+              <p style="color: #7f8c8d; font-size: 14px; margin-top: 30px; text-align: center;">
+                Thank you for your understanding.
+              </p>
+            </div>
+          </div>
+        `
+      }).catch(() => {});
+    }
+
+    res.json({
+      success: true,
+      message: 'Business rejected successfully',
+      business
+    });
+  } catch (error) {
+    // Removed console.error'Reject business error:', error);
     res.status(500).json({ error: 'Server error' });
   }
 });
@@ -137,7 +286,7 @@ router.put('/reviews/:id/approve', async (req, res) => {
       review
     });
   } catch (error) {
-    console.error('Approve review error:', error);
+    // Removed console.error'Approve review error:', error);
     res.status(500).json({ error: 'Server error' });
   }
 });
@@ -157,7 +306,7 @@ router.get('/categories', async (req, res) => {
       categories
     });
   } catch (error) {
-    console.error('Admin get categories error:', error);
+    // Removed console.error'Admin get categories error:', error);
     res.status(500).json({ error: 'Server error' });
   }
 });
@@ -187,7 +336,7 @@ router.get('/users', async (req, res) => {
       users
     });
   } catch (error) {
-    console.error('Admin get users error:', error);
+    // Removed console.error'Admin get users error:', error);
     res.status(500).json({ error: 'Server error' });
   }
 });
@@ -217,7 +366,7 @@ router.put('/users/:id', async (req, res) => {
       user
     });
   } catch (error) {
-    console.error('Admin update user error:', error);
+    // Removed console.error'Admin update user error:', error);
     res.status(500).json({ error: 'Server error' });
   }
 });
@@ -250,7 +399,7 @@ router.delete('/users/:id', async (req, res) => {
       message: 'User deleted successfully'
     });
   } catch (error) {
-    console.error('Admin delete user error:', error);
+    // Removed console.error'Admin delete user error:', error);
     res.status(500).json({ error: 'Server error' });
   }
 });
@@ -289,7 +438,7 @@ router.get('/reviews', async (req, res) => {
       reviews
     });
   } catch (error) {
-    console.error('Admin get reviews error:', error);
+    // Removed console.error'Admin get reviews error:', error);
     res.status(500).json({ error: 'Server error' });
   }
 });
@@ -318,7 +467,7 @@ router.delete('/reviews/:id', async (req, res) => {
       message: 'Review deleted successfully'
     });
   } catch (error) {
-    console.error('Admin delete review error:', error);
+    // Removed console.error'Admin delete review error:', error);
     res.status(500).json({ error: 'Server error' });
   }
 });
@@ -348,7 +497,7 @@ router.put('/businesses/:id', async (req, res) => {
       business
     });
   } catch (error) {
-    console.error('Admin update business error:', error);
+    // Removed console.error'Admin update business error:', error);
     res.status(500).json({ error: 'Server error' });
   }
 });
@@ -377,7 +526,7 @@ router.delete('/businesses/:id', async (req, res) => {
       message: 'Business deleted successfully'
     });
   } catch (error) {
-    console.error('Admin delete business error:', error);
+    // Removed console.error'Admin delete business error:', error);
     res.status(500).json({ error: 'Server error' });
   }
 });
@@ -402,7 +551,7 @@ router.post('/categories', async (req, res) => {
       category
     });
   } catch (error) {
-    console.error('Admin create category error:', error);
+    // Removed console.error'Admin create category error:', error);
     res.status(500).json({ error: error.message || 'Server error' });
   }
 });
@@ -432,7 +581,7 @@ router.put('/categories/:id', async (req, res) => {
       category
     });
   } catch (error) {
-    console.error('Admin update category error:', error);
+    // Removed console.error'Admin update category error:', error);
     res.status(500).json({ error: 'Server error' });
   }
 });
@@ -461,7 +610,7 @@ router.delete('/categories/:id', async (req, res) => {
       message: 'Category deleted successfully'
     });
   } catch (error) {
-    console.error('Admin delete category error:', error);
+    // Removed console.error'Admin delete category error:', error);
     res.status(500).json({ error: 'Server error' });
   }
 });
@@ -490,7 +639,7 @@ router.get('/blogs', async (req, res) => {
       blogs
     });
   } catch (error) {
-    console.error('Admin get blogs error:', error);
+    // Removed console.error'Admin get blogs error:', error);
     res.status(500).json({ error: 'Server error' });
   }
 });
@@ -515,7 +664,7 @@ router.post('/blogs', async (req, res) => {
       blog
     });
   } catch (error) {
-    console.error('Admin create blog error:', error);
+    // Removed console.error'Admin create blog error:', error);
     res.status(500).json({ error: error.message || 'Server error' });
   }
 });
@@ -545,7 +694,7 @@ router.put('/blogs/:id', async (req, res) => {
       blog
     });
   } catch (error) {
-    console.error('Admin update blog error:', error);
+    // Removed console.error'Admin update blog error:', error);
     res.status(500).json({ error: 'Server error' });
   }
 });
@@ -574,7 +723,7 @@ router.delete('/blogs/:id', async (req, res) => {
       message: 'Blog deleted successfully'
     });
   } catch (error) {
-    console.error('Admin delete blog error:', error);
+    // Removed console.error'Admin delete blog error:', error);
     res.status(500).json({ error: 'Server error' });
   }
 });
@@ -603,7 +752,7 @@ router.get('/contacts', async (req, res) => {
       contacts
     });
   } catch (error) {
-    console.error('Admin get contacts error:', error);
+    // Removed console.error'Admin get contacts error:', error);
     res.status(500).json({ error: 'Server error' });
   }
 });
@@ -626,7 +775,7 @@ router.put('/contacts/:id', async (req, res) => {
       contact
     });
   } catch (error) {
-    console.error('Admin update contact error:', error);
+    // Removed console.error'Admin update contact error:', error);
     res.status(500).json({ error: 'Server error' });
   }
 });
@@ -648,7 +797,7 @@ router.delete('/contacts/:id', async (req, res) => {
       message: 'Contact deleted successfully'
     });
   } catch (error) {
-    console.error('Admin delete contact error:', error);
+    // Removed console.error'Admin delete contact error:', error);
     res.status(500).json({ error: 'Server error' });
   }
 });
@@ -680,7 +829,7 @@ router.get('/activities', async (req, res) => {
       activities
     });
   } catch (error) {
-    console.error('Admin get activities error:', error);
+    // Removed console.error'Admin get activities error:', error);
     res.status(500).json({ error: 'Server error' });
   }
 });

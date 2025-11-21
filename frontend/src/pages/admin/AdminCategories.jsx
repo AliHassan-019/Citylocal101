@@ -25,7 +25,6 @@ const AdminCategories = () => {
       const response = await api.get('/admin/categories');
       setCategories(response.data.categories);
     } catch (error) {
-      console.error('Error loading categories:', error);
       alert('Failed to load categories');
     } finally {
       setLoading(false);
@@ -48,7 +47,6 @@ const AdminCategories = () => {
       setFormData({ name: '', icon: '', description: '', isActive: true, order: 0 });
       loadCategories();
     } catch (error) {
-      console.error('Error saving category:', error);
       alert(error.response?.data?.error || 'Failed to save category');
     }
   };
@@ -73,7 +71,6 @@ const AdminCategories = () => {
       alert('Category deleted successfully!');
       loadCategories();
     } catch (error) {
-      console.error('Error deleting category:', error);
       alert('Failed to delete category');
     }
   };

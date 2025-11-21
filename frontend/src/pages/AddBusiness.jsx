@@ -10,7 +10,8 @@ const AddBusiness = () => {
   const [categories, setCategories] = useState([]);
   const [formData, setFormData] = useState({
     name: '', description: '', categoryId: '', address: '', city: '', state: '', zipCode: '',
-    phone: '', email: '', website: ''
+    phone: '', email: '', website: '',
+    socialLinks: { facebook: '', twitter: '', instagram: '', linkedin: '' }
   });
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
@@ -29,7 +30,6 @@ const AddBusiness = () => {
       const response = await api.get('/categories');
       setCategories(response.data.categories || []);
     } catch (error) {
-      console.error('Error loading categories:', error);
     }
   };
 
@@ -49,16 +49,11 @@ const AddBusiness = () => {
         website: formData.website || null
       };
       
-      console.log('Submitting business data:', cleanData);
-      
       const response = await api.post('/businesses', cleanData);
-      console.log('Response:', response.data);
       
       setSuccess('Business submitted successfully! It will be reviewed and approved soon.');
       setTimeout(() => navigate('/'), 3000);
     } catch (error) {
-      console.error('Submit error:', error);
-      console.error('Error response:', error.response?.data);
       setError(error.response?.data?.error || 'Failed to submit business. Please try again.');
     } finally {
       setLoading(false);
@@ -177,6 +172,62 @@ const AddBusiness = () => {
               placeholder="https://yourbusiness.com"
               value={formData.website} 
               onChange={(e) => setFormData({ ...formData, website: e.target.value })} 
+            />
+          </div>
+
+          <h3 style={{ marginTop: '30px', marginBottom: '15px', color: '#2c3e50' }}>
+            <i className="fas fa-share-alt"></i> Social Media Links (Optional)
+          </h3>
+          
+          <div className="form-group">
+            <label><i className="fab fa-facebook"></i> Facebook</label>
+            <input 
+              type="url" 
+              placeholder="https://facebook.com/yourpage"
+              value={formData.socialLinks.facebook} 
+              onChange={(e) => setFormData({ 
+                ...formData, 
+                socialLinks: { ...formData.socialLinks, facebook: e.target.value } 
+              })} 
+            />
+          </div>
+          
+          <div className="form-group">
+            <label><i className="fab fa-twitter"></i> Twitter</label>
+            <input 
+              type="url" 
+              placeholder="https://twitter.com/yourhandle"
+              value={formData.socialLinks.twitter} 
+              onChange={(e) => setFormData({ 
+                ...formData, 
+                socialLinks: { ...formData.socialLinks, twitter: e.target.value } 
+              })} 
+            />
+          </div>
+          
+          <div className="form-group">
+            <label><i className="fab fa-instagram"></i> Instagram</label>
+            <input 
+              type="url" 
+              placeholder="https://instagram.com/yourhandle"
+              value={formData.socialLinks.instagram} 
+              onChange={(e) => setFormData({ 
+                ...formData, 
+                socialLinks: { ...formData.socialLinks, instagram: e.target.value } 
+              })} 
+            />
+          </div>
+          
+          <div className="form-group">
+            <label><i className="fab fa-linkedin"></i> LinkedIn</label>
+            <input 
+              type="url" 
+              placeholder="https://linkedin.com/company/yourcompany"
+              value={formData.socialLinks.linkedin} 
+              onChange={(e) => setFormData({ 
+                ...formData, 
+                socialLinks: { ...formData.socialLinks, linkedin: e.target.value } 
+              })} 
             />
           </div>
           

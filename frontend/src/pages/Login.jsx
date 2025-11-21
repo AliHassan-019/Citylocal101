@@ -1,15 +1,17 @@
 import React, { useState, useContext } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
+import { useNavigate, Link, useLocation } from 'react-router-dom';
 import { AuthContext } from '../context/AuthContext';
 import api from '../services/api';
 import './Auth.css';
 
 const Login = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const { login } = useContext(AuthContext);
   const [formData, setFormData] = useState({ email: '', password: '' });
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -17,10 +19,23 @@ const Login = () => {
     setLoading(true);
 
     try {
-      await login(formData.email, formData.password);
-      navigate('/');
+      const result = await login(formData.email, formData.password);
+      
+      // Redirect to main website (homepage) or intended destination
+      const from = location.state?.from || '/';
+      navigate(from);
     } catch (error) {
-      setError(error.response?.data?.error || 'Login failed. Please try again.');
+      // Hide admin-specific errors - just show generic wrong credentials
+      const errorMsg = error.response?.data?.error || 'Login failed. Please try again.';
+      
+      // If it's an admin login attempt or invalid credentials, show generic error
+      if (error.response?.status === 401 || error.response?.status === 403 || 
+          errorMsg.toLowerCase().includes('admin') || 
+          errorMsg.toLowerCase().includes('invalid credentials')) {
+        setError('Invalid email or password. Please check your credentials and try again.');
+      } else {
+        setError(errorMsg);
+      }
     } finally {
       setLoading(false);
     }
@@ -49,13 +64,23 @@ const Login = () => {
           </div>
           <div className="form-group">
             <label><i className="fas fa-lock"></i> Password</label>
-            <input
-              type="password"
-              required
-              placeholder="Enter your password"
-              value={formData.password}
-              onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-            />
+            <div className="password-input-wrapper">
+              <input
+                type={showPassword ? 'text' : 'password'}
+                required
+                placeholder="Enter your password"
+                value={formData.password}
+                onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+              />
+              <button
+                type="button"
+                className="password-toggle"
+                onClick={() => setShowPassword(!showPassword)}
+                tabIndex={-1}
+              >
+                <i className={`fas ${showPassword ? 'fa-eye-slash' : 'fa-eye'}`}></i>
+              </button>
+            </div>
           </div>
           <button type="submit" className="btn-primary" disabled={loading}>
             {loading ? (
